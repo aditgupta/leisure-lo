@@ -1,5 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { PlusCircle, Clock, Archive, XCircle, CheckCircle } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { PlusCircle, Clock, Archive, XCircle, CheckCircle, Settings, Download, Upload, Trash2 } from 'lucide-react';
+
+const formatDateTime = (update) => {
+  if (update.timestamp) {
+    return `${new Date(update.timestamp).toLocaleDateString()} at ${update.time}`;
+  } else if (update.date) {
+    return update.date;
+  }
+  return 'No date available';
+};
 
 const STATUS_COLORS = {
   Active: 'bg-green-500',
@@ -44,6 +53,87 @@ const SidePanel = ({ children, onClose }) => (
   </div>
 );
 
+const SettingsMenu = ({ onExport, onImport, onClear }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const fileInputRef = useRef();
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (event) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = JSON.parse(e.target.result);
+          onImport(data);
+        } catch (error) {
+          alert('Error importing file. Please make sure it\'s a valid JSON file.');
+        }
+      };
+      reader.readAsText(file);
+    }
+  };
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="p-2 hover:bg-gray-100 rounded-full"
+      >
+        <Settings size={20} />
+      </button>
+
+      {isOpen && (
+        <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-10">
+          <button
+            onClick={() => {
+              onExport();
+              setIsOpen(false);
+            }}
+            className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center"
+          >
+            <Download size={16} className="mr-2" />
+            Export Data
+          </button>
+          <button
+            onClick={handleImportClick}
+            className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center"
+          >
+            <Upload size={16} className="mr-2" />
+            Import Data
+          </button>
+          <button
+            onClick={() => {
+              if (window.confirm('Are you sure you want to clear all data? This cannot be undone.')) {
+                onClear();
+                setIsOpen(false);
+              }
+            }}
+            className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center text-red-600"
+          >
+            <Trash2 size={16} className="mr-2" />
+            Clear All Data
+          </button>
+        </div>
+      )}
+
+      <input
+        type="file"
+        ref={fileInputRef}
+        className="hidden"
+        accept=".json"
+        onChange={handleFileChange}
+        onClick={(e) => {
+          e.target.value = null;
+        }}
+      />
+    </div>
+  );
+};
+
 const AddActivityModal = ({ onClose, onAdd }) => {
   const today = new Date().toISOString().split('T')[0];
   
@@ -68,106 +158,98 @@ const AddActivityModal = ({ onClose, onAdd }) => {
 
   return (
     <Modal onClose={onClose}>
-      <h2 className="text-2xl font-bold mb-6 pt-4">Add New Activity</h2>
-      <form onSubmit={handleSubmit}>
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Activity Name
-          </label>
-          <input
-            type="text"
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            className="w-full p-2 border rounded-md"
-            placeholder="Enter activity name"
-            required
-          />
-        </div>
+      <div className="pt-6">
+        <h2 className="text-2xl font-bold mb-6">Add New Activity</h2>
+        <form onSubmit={handleSubmit}>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Activity Name
+            </label>
+            <input
+              type="text"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              className="w-full p-2 border rounded-md"
+              placeholder="Enter activity name"
+              required
+            />
+          </div>
 
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Start Date
-          </label>
-          <input
-            type="date"
-            value={formData.startDate}
-            onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-            className="w-full p-2 border rounded-md"
-            required
-          />
-        </div>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Start Date
+            </label>
+            <input
+              type="date"
+              value={formData.startDate}
+              onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+              className="w-full p-2 border rounded-md"
+              required
+            />
+          </div>
 
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Description
-          </label>
-          <textarea
-            value={formData.description}
-            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-            className="w-full p-2 border rounded-md"
-            placeholder="Enter activity description"
-            rows="3"
-            required
-          />
-        </div>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Description
+            </label>
+            <textarea
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              className="w-full p-2 border rounded-md"
+              placeholder="Enter activity description"
+              rows="3"
+              required
+            />
+          </div>
 
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            What inspired you to start this activity? Share your motivation and future goals.
-          </label>
-          <textarea
-            value={formData.motivation}
-            onChange={(e) => setFormData({ ...formData, motivation: e.target.value })}
-            className="w-full p-2 border rounded-md"
-            placeholder="Share your inspiration, intentions, and plans..."
-            rows="4"
-            required
-          />
-        </div>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              What inspired you to start this activity? Share your motivation and future goals.
+            </label>
+            <textarea
+              value={formData.motivation}
+              onChange={(e) => setFormData({ ...formData, motivation: e.target.value })}
+              className="w-full p-2 border rounded-md"
+              placeholder="Share your inspiration, intentions, and plans..."
+              rows="4"
+              required
+            />
+          </div>
 
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Status
-          </label>
-          <select
-            value={formData.status}
-            onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-            className="w-full p-2 border rounded-md"
-          >
-            {Object.keys(STATUS_COLORS).map(status => (
-              <option key={status} value={status}>{status}</option>
-            ))}
-          </select>
-        </div>
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Status
+            </label>
+            <select
+              value={formData.status}
+              onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+              className="w-full p-2 border rounded-md"
+            >
+              {Object.keys(STATUS_COLORS).map(status => (
+                <option key={status} value={status}>{status}</option>
+              ))}
+            </select>
+          </div>
 
-        <div className="flex justify-end gap-4">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-2 text-gray-600 hover:text-gray-800"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
-          >
-            Add Activity
-          </button>
-        </div>
-      </form>
+          <div className="flex justify-end gap-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-gray-600 hover:text-gray-800"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+            >
+              Add Activity
+            </button>
+          </div>
+        </form>
+      </div>
     </Modal>
   );
-};
-
-const formatDateTime = (update) => {
-  // Handle both new and old formats
-  if (update.timestamp) {
-    return `${new Date(update.timestamp).toLocaleDateString()} at ${update.time}`;
-  } else if (update.date) {
-    return update.date;
-  }
-  return 'No date available';
 };
 
 const ActivityCard = ({ activity, onClick }) => {
@@ -201,6 +283,7 @@ const ActivityCard = ({ activity, onClick }) => {
 
 const ActivityDetail = ({ activity, onClose, onStatusChange, onAddUpdate, onDelete }) => {
   const [newUpdate, setNewUpdate] = useState('');
+  const [showSettings, setShowSettings] = useState(false);
 
   const handleAddUpdate = () => {
     if (newUpdate.trim()) {
@@ -219,7 +302,40 @@ const ActivityDetail = ({ activity, onClose, onStatusChange, onAddUpdate, onDele
 
   return (
     <SidePanel onClose={onClose}>
-      <h2 className="text-2xl font-bold mb-2">{activity.name}</h2>
+      <div className="flex justify-between items-start mb-6">
+        <h2 className="text-2xl font-bold">{activity.name}</h2>
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <button
+              onClick={() => setShowSettings(!showSettings)}
+              className="p-2 hover:bg-gray-100 rounded-full"
+            >
+              <Settings size={20} />
+            </button>
+            {showSettings && (
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-10">
+                <button
+                  onClick={() => {
+                    if (window.confirm('Are you sure you want to delete this activity?')) {
+                      onDelete(activity.id);
+                    }
+                  }}
+                  className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center text-red-600"
+                >
+                  <Trash2 size={16} className="mr-2" />
+                  Delete Activity
+                </button>
+              </div>
+            )}
+          </div>
+          <button 
+            onClick={onClose}
+            className="p-2 hover:bg-gray-100 rounded-full text-gray-500 hover:text-gray-700"
+          >
+            <XCircle size={20} />
+          </button>
+        </div>
+      </div>
       
       <div className="mb-6 bg-gray-50 rounded-lg p-4">
         <div className="text-sm text-gray-600 mb-2">
@@ -245,17 +361,8 @@ const ActivityDetail = ({ activity, onClose, onStatusChange, onAddUpdate, onDele
         </select>
       </div>
 
-      <div className="flex justify-end mb-4">
-        <button
-          onClick={() => onDelete(activity.id)}
-          className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
-        >
-          Delete Activity
-        </button>
-      </div>
-
       <div className="mb-6">
-        <h3 className="text-lg font-semibold mb-4">Update</h3>
+        <h3 className="text-lg font-semibold mb-4">Updates</h3>
         
         <div className="mb-4">
           <textarea
@@ -363,6 +470,30 @@ const LeisureLog = () => {
     }
   };
 
+  const handleExport = () => {
+    const dataStr = JSON.stringify(activities, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `leisure-log-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImport = (data) => {
+    if (Array.isArray(data)) {
+      setActivities(data);
+    }
+  };
+
+  const handleClearData = () => {
+    setActivities([]);
+    localStorage.removeItem('leisureLogActivities');
+  };
+
   const groupedActivities = {
     active: activities.filter(a => a.status === 'Active'),
     inactive: activities.filter(a => ['Inactive', 'Stale'].includes(a.status)),
@@ -376,13 +507,20 @@ const LeisureLog = () => {
       <div className="max-w-[1200px] mx-auto w-full">
         <div className="flex justify-between items-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900">Leisure Log</h1>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="bg-blue-500 text-white px-4 py-2 rounded-lg flex items-center hover:bg-blue-600"
-          >
-            <PlusCircle className="mr-2" size={20} />
-            Add Activity
-          </button>
+          <div className="flex items-center gap-4">
+            <SettingsMenu 
+              onExport={handleExport}
+              onImport={handleImport}
+              onClear={handleClearData}
+            />
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="bg-blue-500 text-white px-4 py-2 rounded-lg flex items-center hover:bg-blue-600"
+            >
+              <PlusCircle className="mr-2" size={20} />
+              Add Activity
+            </button>
+          </div>
         </div>
 
         <ActivitySection
