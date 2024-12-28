@@ -255,7 +255,7 @@ const ActivityDetail = ({ activity, onClose, onStatusChange, onAddUpdate, onDele
       </div>
 
       <div className="mb-6">
-        <h3 className="text-lg font-semibold mb-4">Updates</h3>
+        <h3 className="text-lg font-semibold mb-4">Update</h3>
         
         <div className="mb-4">
           <textarea
