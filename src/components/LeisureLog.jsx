@@ -11,13 +11,19 @@ const formatDateTime = (update) => {
 };
 
 const STATUS_COLORS = {
-  Active: 'bg-green-500',
-  Inactive: 'bg-yellow-400',
+  Active: 'bg-emerald-500',
+  Inactive: 'bg-amber-400',
   Stale: 'bg-orange-500',
-  Completed: 'bg-blue-500',
-  Archived: 'bg-gray-400',
-  Abandoned: 'bg-red-500'
+  Completed: 'bg-sky-500',
+  Archived: 'bg-zinc-400',
+  Abandoned: 'bg-rose-500'
 };
+
+const FadeIn = ({ children }) => (
+  <div className="animate-fadeIn">
+    {children}
+  </div>
+);
 
 const Modal = ({ children, onClose }) => (
   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
@@ -256,28 +262,35 @@ const ActivityCard = ({ activity, onClick }) => {
   const lastUpdate = activity.updates[0];
   
   return (
-    <div 
-      onClick={onClick}
-      className="bg-white rounded-xl shadow-sm p-4 cursor-pointer hover:shadow-md transition-shadow"
-    >
-      <div className="flex items-center justify-between mb-2">
-        <h3 className="text-lg font-medium text-gray-900">{activity.name}</h3>
-        <span className={`px-3 py-1 rounded-full text-sm font-medium text-white ${STATUS_COLORS[activity.status]}`}>
-          {activity.status}
-        </span>
-      </div>
-      <p className="text-gray-600 text-sm mb-2">{activity.description}</p>
-      <div className="space-y-1">
-        <div className="text-gray-500 text-sm">
-          {activity.updates.length} updates
+    <FadeIn>
+      <div 
+        onClick={onClick}
+        className="bg-white rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.08)] p-4 cursor-pointer 
+                  hover:shadow-[0_4px_12px_rgba(0,0,0,0.12)] transition-all duration-300
+                  hover:translate-y-[-2px]"
+      >
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-lg font-medium text-gray-900">{activity.name}</h3>
+          <span className={`px-3 py-1 rounded-full text-sm font-medium text-white ${STATUS_COLORS[activity.status]} 
+                          transition-colors duration-300`}>
+            {activity.status}
+          </span>
         </div>
-        {lastUpdate && (
-          <div className="text-gray-400 text-sm">
-            Last updated - {formatDateTime(lastUpdate)}
+        <p className="text-gray-600 text-sm mb-3">{activity.description}</p>
+        <div className="space-y-2 pt-2 border-t border-gray-100">
+          <div className="text-gray-500 text-sm flex items-center">
+            <Clock size={14} className="mr-1.5 text-gray-400" />
+            {activity.updates.length} updates
           </div>
-        )}
+          {lastUpdate && (
+            <div className="text-gray-400 text-sm flex items-center">
+              <CheckCircle size={14} className="mr-1.5 opacity-60" />
+              Last updated - {formatDateTime(lastUpdate)}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </FadeIn>
   );
 };
 
@@ -404,18 +417,31 @@ const ActivityDetail = ({ activity, onClose, onStatusChange, onAddUpdate, onDele
 const ActivitySection = ({ title, icon: Icon, activities, onActivityClick }) => (
   <section className="mb-12">
     <div className="flex items-center gap-3 mb-4">
-      <Icon size={24} />
-      <h2 className="text-xl font-bold">{title}</h2>
+      <div className="flex items-center gap-3">
+        <Icon size={24} />
+        <h2 className="text-xl font-bold text-gray-800">{title}</h2>
+      </div>
+      {activities.length > 0 && (
+        <span className="px-2 py-0.5 rounded-md bg-gray-100 text-gray-600 text-sm">
+          {activities.length}
+        </span>
+      )}
     </div>
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      {activities.map(activity => (
-        <ActivityCard
-          key={activity.id}
-          activity={activity}
-          onClick={() => onActivityClick(activity)}
-        />
-      ))}
-    </div>
+    {activities.length > 0 ? (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {activities.map(activity => (
+          <ActivityCard
+            key={activity.id}
+            activity={activity}
+            onClick={() => onActivityClick(activity)}
+          />
+        ))}
+      </div>
+    ) : (
+      <div className="text-gray-500 text-sm italic bg-gray-50 rounded-lg p-4 flex items-center justify-center">
+        No activities in this section yet
+      </div>
+    )}
   </section>
 );
 
@@ -503,9 +529,9 @@ const LeisureLog = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F6F5F2] px-8 py-6">
+    <div className="min-h-screen bg-[#F6F5F2] bg-subtle-pattern bg-fixed px-8 py-6" style={{ backgroundColor: '#F6F5F2' }}>
       <div className="max-w-[1200px] mx-auto w-full">
-        <div className="flex justify-between items-center mb-12">
+        <div className="flex justify-between items-center mb-8">
           <h1 className="text-4xl font-bold text-gray-900">Leisure Log</h1>
           <div className="flex items-center gap-4">
             <SettingsMenu 
@@ -522,6 +548,7 @@ const LeisureLog = () => {
             </button>
           </div>
         </div>
+        <hr className="border-gray-200 mb-8" />
 
         <ActivitySection
           title="Active Activities"
