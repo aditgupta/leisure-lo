@@ -532,7 +532,9 @@ const LeisureLog = () => {
     <div className="min-h-screen bg-[#F6F5F2] bg-subtle-pattern bg-fixed px-8 py-6" style={{ backgroundColor: '#F6F5F2' }}>
       <div className="max-w-[1200px] mx-auto w-full">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900">Leisure Log</h1>
+          <h1 className="text-4xl font-bold text-gray-900 flex items-center gap-3">
+          <img src="/tree.svg" alt="Tree Icon" className="w-8 h-8" />
+            Leisure Log</h1>
           <div className="flex items-center gap-4">
             <SettingsMenu 
               onExport={handleExport}
