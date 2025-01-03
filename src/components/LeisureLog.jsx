@@ -521,7 +521,8 @@ const LeisureLog = () => {
   };
 
   const groupedActivities = {
-    active: activities.filter(a => a.status === 'Active'),
+    active: activities.filter(a => a.status === 'Active')
+    .sort((a, b) => b.updates.length - a.updates.length),
     inactive: activities.filter(a => ['Inactive', 'Stale'].includes(a.status)),
     completed: activities.filter(a => a.status === 'Completed'),
     archived: activities.filter(a => a.status === 'Archived'),
